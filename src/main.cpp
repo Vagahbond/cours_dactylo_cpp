@@ -14,6 +14,10 @@
 // redefine namespace for better usability
 namespace fs = std::experimental::filesystem;
 
+double decaseconds_to_seconds(size_t decaseconds) {
+  return static_cast<double>(decaseconds) / 1000;
+}
+
 // Timer routine
 void count_time(std::atomic<size_t> &time_value, std::atomic<bool> &stop_flag) {
   while (stop_flag.load() == false) {
@@ -112,7 +116,7 @@ int spell_check(std::string source, std::string check, size_t time)
     std::cout << "Perfect !" << std::endl;
   }
 
-  std::cout << "You took " << static_cast<double>(time) / 1000 << " seconds to write it!" << std::endl;
+  std::cout << "You took " << decaseconds_to_seconds(time) << " seconds to write it!" << std::endl;
 
   return errors;
 }
@@ -171,7 +175,7 @@ void display_errors(std::vector<std::tuple<std::string, std::string, size_t>> wo
     std::cin.get();
   }
 
-  double total_time_seconds = static_cast<double>(total_time) / 1000;
+  double total_time_seconds = decaseconds_to_seconds(total_time);
 
   std::cout << "\x1B[2J\x1B[H";
   std::cout << "You made " << errors << " errors!" << std::endl;
