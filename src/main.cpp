@@ -14,15 +14,21 @@
 // redefine namespace for better usability
 namespace fs = std::experimental::filesystem;
 
-double decaseconds_to_seconds(size_t decaseconds) {
+// convert decaseconds to seconds
+double decaseconds_to_seconds(size_t decaseconds)
+{
   return static_cast<double>(decaseconds) / 1000;
 }
 
 // Timer routine
-void count_time(std::atomic<size_t> &time_value, std::atomic<bool> &stop_flag) {
-  while (stop_flag.load() == false) {
+void count_time(std::atomic<size_t> &time_value, std::atomic<bool> &stop_flag)
+{
+  while (stop_flag.load() == false)
+  {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
     size_t current_time = time_value.load();
+
     time_value.store(current_time + 10);
   }
 }
@@ -56,8 +62,10 @@ bool prompt_stop()
   {
     std::cout << "\x1B[2J\x1B[H";
     std::cout << "Exit the program? (y/n)" << std::endl;
+
     char res;
     std::cin >> res;
+
     if (res == 'y')
     {
       return true;
@@ -69,14 +77,10 @@ bool prompt_stop()
   }
 }
 
-// check errors and print them individualy
-int spell_check(std::string source, std::string check, size_t time)
+// Finds errors, indicates their location, and return how many there were
+int find_and_point_typos(std::string source, std::string check)
 {
   int errors = 0;
-  std::cout << "\x1B[2J\x1B[H";
-  std::cout << "Errors for : " << std::endl;
-  std::cout << check << std::endl;
-
   for (int i = 0; i < source.size(); ++i)
   {
     if (source[i] == check[i])
@@ -95,8 +99,14 @@ int spell_check(std::string source, std::string check, size_t time)
     std::cout << "x";
   }
 
+
   std::cout << std::endl;
 
+  return errors;
+}
+
+void print_base_character_when_error(std::string source, std::string check)
+{
   for (int i = 0; i < source.size(); ++i)
   {
     if (source[i] == check[i])
@@ -109,7 +119,21 @@ int spell_check(std::string source, std::string check, size_t time)
     }
   }
 
+
   std::cout << std::endl;
+}
+
+// check errors and print them individualy
+int spell_check(std::string source, std::string check, size_t time)
+{
+
+  std::cout << "\x1B[2J\x1B[H";
+  std::cout << "Errors for : " << std::endl;
+  std::cout << check << std::endl;
+
+  int errors = find_and_point_typos(source, check);
+
+  print_base_character_when_error(source, check);
 
   if (errors == 0)
   {
@@ -119,6 +143,10 @@ int spell_check(std::string source, std::string check, size_t time)
   std::cout << "You took " << decaseconds_to_seconds(time) << " seconds to write it!" << std::endl;
 
   return errors;
+}
+
+std::string rand_word_from_dict(std::vector<std::string> dictionnary) {
+  return dictionnary[rand() % (dictionnary.size() - 1)];
 }
 
 std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_words, std::vector<std::string> &dictionnary)
@@ -131,7 +159,7 @@ std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_wo
 
     std::atomic<bool> stop_flag(false);
 
-    std::string word = dictionnary[rand() % (dictionnary.size() - 1)];
+    std::string word = rand_word_from_dict(dictionnary);
 
     std::string input;
     std::cout << "\x1B[2J\x1B[H";
@@ -142,7 +170,7 @@ std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_wo
 
     stop_flag.store(true);
 
-    chrono_thread.join();  
+    chrono_thread.join();
 
     res.push_back(std::make_tuple(word, input, chrono.load()));
   }
@@ -214,7 +242,7 @@ void main_loop(std::vector<std::string> dictionnary)
 int main(int argc, char const *argv[])
 {
   /* initialize random seed: */
-  srand (time(NULL));
+  srand(time(NULL));
 
   std::cout << "Welcome to this dactylo skills measuring software. Words will be given to you and you will have to type them the fastest you can !" << std::endl;
   std::cin.get();
