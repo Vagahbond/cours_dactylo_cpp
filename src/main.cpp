@@ -8,16 +8,21 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
-#include <tuple>
 #include <time.h>
 
 // redefine namespace for better usability
 namespace fs = std::experimental::filesystem;
 
+typedef struct {
+  std::string source;
+  std::string input;
+  size_t time;
+} type_result;
+
 // convert decaseconds to seconds
 double decaseconds_to_seconds(size_t decaseconds)
 {
-  return static_cast<double>(decaseconds) / 1000;
+  return static_cast<long double>(decaseconds) / 1000;
 }
 
 // Timer routine
@@ -149,9 +154,9 @@ std::string rand_word_from_dict(std::vector<std::string> dictionnary) {
   return dictionnary[rand() % (dictionnary.size() - 1)];
 }
 
-std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_words, std::vector<std::string> &dictionnary)
+std::vector<type_result> prompt_words(int nb_words, std::vector<std::string> &dictionnary)
 {
-  std::vector<std::tuple<std::string, std::string, size_t>> res;
+  std::vector<type_result> res;
 
   for (int i = 0; i < nb_words; ++i)
   {
@@ -172,13 +177,18 @@ std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_wo
 
     chrono_thread.join();
 
-    res.push_back(std::make_tuple(word, input, chrono.load()));
+    type_result word_result;
+    word_result.input = input;
+    word_result.source = word;
+    word_result.time = chrono.load();
+
+    res.push_back(word_result);
   }
 
   return res;
 }
 
-void display_errors(std::vector<std::tuple<std::string, std::string, size_t>> words)
+void display_errors(std::vector<type_result> words)
 {
   std::cout << "\x1B[2J\x1B[H";
   std::cout << "Let's see your errors !" << std::endl;
@@ -190,15 +200,9 @@ void display_errors(std::vector<std::tuple<std::string, std::string, size_t>> wo
 
   for (int i = 0; i < words.size(); ++i)
   {
-    std::string source;
-    std::string input;
-    size_t time;
-
-    std::tie(source, input, time) = words[i];
-
-    errors += spell_check(source, input, time);
-    total_time += time;
-    total_letters += source.size();
+    errors += spell_check(words[i].source, words[i].input, words[i].time);
+    total_time += words[i].time;
+    total_letters += words[i].source.size();
 
     std::cin.get();
   }
