@@ -9,6 +9,7 @@
 #include <chrono>
 #include <atomic>
 #include <tuple>
+#include <time.h>
 
 // redefine namespace for better usability
 namespace fs = std::experimental::filesystem;
@@ -85,7 +86,7 @@ int spell_check(std::string source, std::string check, size_t time)
     }
   }
 
-  for (int j = source.length(); j < check.length(); ++j)
+  for (int j = source.size(); j < check.size(); ++j)
   {
     std::cout << "x";
   }
@@ -122,11 +123,9 @@ std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_wo
 
   for (int i = 0; i < nb_words; ++i)
   {
-    std::atomic<size_t> chrono;
-    chrono.store(0);
+    std::atomic<size_t> chrono(0);
 
-    std::atomic<bool> stop_flag;
-    stop_flag.store(false);
+    std::atomic<bool> stop_flag(false);
 
     std::string word = dictionnary[rand() % (dictionnary.size() - 1)];
 
@@ -210,6 +209,9 @@ void main_loop(std::vector<std::string> dictionnary)
 
 int main(int argc, char const *argv[])
 {
+  /* initialize random seed: */
+  srand (time(NULL));
+
   std::cout << "Welcome to this dactylo skills measuring software. Words will be given to you and you will have to type them the fastest you can !" << std::endl;
   std::cin.get();
 
