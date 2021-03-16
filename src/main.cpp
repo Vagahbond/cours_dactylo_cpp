@@ -153,19 +153,34 @@ void display_errors(std::vector<std::tuple<std::string, std::string, size_t>> wo
   std::cout << "\x1B[2J\x1B[H";
   std::cout << "Let's see your errors !" << std::endl;
   std::cin.get();
+
   int errors = 0;
+  size_t total_time = 0;
+  size_t total_letters = 0;
+
   for (int i = 0; i < words.size(); ++i)
   {
     std::string source;
     std::string input;
     size_t time;
+
     std::tie(source, input, time) = words[i];
+
     errors += spell_check(source, input, time);
+    total_time += time;
+    total_letters += source.size();
+
     std::cin.get();
   }
 
+  double total_time_seconds = static_cast<double>(total_time) / 1000;
+
   std::cout << "\x1B[2J\x1B[H";
-  std::cout << "you made " << errors << " errors !" << std::endl;
+  std::cout << "You made " << errors << " errors!" << std::endl;
+  std::cout << "It took you " << total_time_seconds << " seconds to write " << words.size() << " words." << std::endl;
+  std::cout << "That's an average of " << total_time_seconds / words.size() << " seconds per word, or " << total_time_seconds / total_letters << " per letter!" << std::endl;
+  std::cout << "it is equivalent to " << (60 * words.size()) / total_time_seconds << " words or " << (60 * total_letters) / total_time_seconds << " letters in a minute." << std::endl;
+
   std::cin.get();
 }
 
