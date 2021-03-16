@@ -101,7 +101,6 @@ int spell_check(std::string source, std::string check, size_t time)
     else
     {
       std::cout << source[i];
-      errors++;
     }
   }
 
