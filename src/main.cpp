@@ -5,9 +5,22 @@
 #include <vector>
 #include <stdexcept>
 #include <cstdlib>
+#include <thread>
+#include <chrono>
+#include <atomic>
+#include <tuple>
 
 // redefine namespace for better usability
 namespace fs = std::experimental::filesystem;
+
+// Timer routine
+void count_time(std::atomic<size_t> &time_value, std::atomic<bool> &stop_flag) {
+  while (stop_flag.load() == false) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    size_t current_time = time_value.load();
+    time_value.store(current_time + 10);
+  }
+}
 
 // load the dictionnary of possible words from a file
 std::vector<std::string> load_dictionnary(const char *path)
@@ -52,7 +65,7 @@ bool prompt_stop()
 }
 
 // check errors and print them individualy
-int spell_check(std::string source, std::string check)
+int spell_check(std::string source, std::string check, size_t time)
 {
   int errors = 0;
   std::cout << "\x1B[2J\x1B[H";
@@ -98,29 +111,44 @@ int spell_check(std::string source, std::string check)
   {
     std::cout << "Perfect !" << std::endl;
   }
+
+  std::cout << "You took " << static_cast<double>(time) / 1000 << " seconds to write it!" << std::endl;
+
   return errors;
 }
 
-std::vector<std::pair<std::string, std::string>> prompt_words(int nb_words, std::vector<std::string> &dictionnary)
+std::vector<std::tuple<std::string, std::string, size_t>> prompt_words(int nb_words, std::vector<std::string> &dictionnary)
 {
-  std::vector<std::pair<std::string, std::string>> res;
+  std::vector<std::tuple<std::string, std::string, size_t>> res;
 
   for (int i = 0; i < nb_words; ++i)
   {
+    std::atomic<size_t> chrono;
+    chrono.store(0);
+
+    std::atomic<bool> stop_flag;
+    stop_flag.store(false);
+
     std::string word = dictionnary[rand() % (dictionnary.size() - 1)];
 
     std::string input;
     std::cout << "\x1B[2J\x1B[H";
     std::cout << "Word: " << word << std::endl;
+
+    std::thread chrono_thread(count_time, std::ref(chrono), std::ref(stop_flag));
     std::cin >> input;
 
-    res.push_back(std::make_pair(word, input));
+    stop_flag.store(true);
+
+    chrono_thread.join();  
+
+    res.push_back(std::make_tuple(word, input, chrono.load()));
   }
 
   return res;
 }
 
-void display_errors(std::vector<std::pair<std::string, std::string>> words)
+void display_errors(std::vector<std::tuple<std::string, std::string, size_t>> words)
 {
   std::cout << "\x1B[2J\x1B[H";
   std::cout << "Let's see your errors !" << std::endl;
@@ -128,7 +156,11 @@ void display_errors(std::vector<std::pair<std::string, std::string>> words)
   int errors = 0;
   for (int i = 0; i < words.size(); ++i)
   {
-    errors += spell_check(words[i].first, words[i].second);
+    std::string source;
+    std::string input;
+    size_t time;
+    std::tie(source, input, time) = words[i];
+    errors += spell_check(source, input, time);
     std::cin.get();
   }
 
