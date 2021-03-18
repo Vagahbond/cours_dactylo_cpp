@@ -43,7 +43,7 @@ std::vector<std::string> load_dictionnary(const char *path)
 {
   if (!fs::exists(path))
   {
-    std::cerr << "Please provide a dictionnary !" << std::endl;
+    std::cerr << "Please provide a valid dictionnary !" << std::endl;
     throw std::invalid_argument(std::string("Could not read dictionnary file."));
   }
 
@@ -102,6 +102,7 @@ int find_and_point_typos(std::string source, std::string check)
   for (int j = source.size(); j < check.size(); ++j)
   {
     std::cout << "x";
+    errors++;
   }
 
 
@@ -110,6 +111,7 @@ int find_and_point_typos(std::string source, std::string check)
   return errors;
 }
 
+// print character that should be there when there is an error
 void print_base_character_when_error(std::string source, std::string check)
 {
   for (int i = 0; i < source.size(); ++i)
@@ -150,10 +152,12 @@ int spell_check(std::string source, std::string check, size_t time)
   return errors;
 }
 
+// pick a random word from the dictionnary
 std::string rand_word_from_dict(std::vector<std::string> dictionnary) {
   return dictionnary[rand() % (dictionnary.size() - 1)];
 }
 
+// loop that prompts every word to the suer
 std::vector<type_result> prompt_words(int nb_words, std::vector<std::string> &dictionnary)
 {
   std::vector<type_result> res;
@@ -235,9 +239,9 @@ void main_loop(std::vector<std::string> dictionnary)
     std::cout << nb_words << " words will be prompted. Press any key when you're ready !" << std::endl;
     std::cin.get();
 
-    auto words = prompt_words(nb_words, dictionnary);
+    auto result = prompt_words(nb_words, dictionnary);
 
-    display_errors(words);
+    display_errors(result);
 
     stop_flag = prompt_stop();
   }
@@ -246,7 +250,7 @@ void main_loop(std::vector<std::string> dictionnary)
 int main(int argc, char const *argv[])
 {
   /* initialize random seed: */
-  srand(time(NULL));
+  srand(time(NULL)); 
 
   std::cout << "Welcome to this dactylo skills measuring software. Words will be given to you and you will have to type them the fastest you can !" << std::endl;
   std::cin.get();
